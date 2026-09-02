@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "5UlOkEKY9jAsR3AnSQY+EeKoi+oKlUgGQmgvRkdfFsI=",
+  "Source": "TechERP.API",
+  "BasePath": "_content/TechERP.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

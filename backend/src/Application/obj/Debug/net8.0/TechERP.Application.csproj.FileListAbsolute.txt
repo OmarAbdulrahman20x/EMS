@@ -1,0 +1,17 @@
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.csproj.AssemblyReference.cache
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.AssemblyInfoInputs.cache
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.AssemblyInfo.cs
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.csproj.CoreCompileInputs.cache
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Application.deps.json
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Application.dll
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Application.pdb
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Domain.dll
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Infrastructure.dll
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Domain.pdb
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\bin\Debug\net8.0\TechERP.Infrastructure.pdb
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP..6B6D0B95.Up2Date
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.dll
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\refint\TechERP.Application.dll
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\TechERP.Application.pdb
+C:\Users\pc\Desktop\EMS\EMS\backend\src\Application\obj\Debug\net8.0\ref\TechERP.Application.dll
