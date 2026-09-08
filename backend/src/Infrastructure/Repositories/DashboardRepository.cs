@@ -140,97 +140,123 @@ public class DashboardRepository : IDashboardRepository
     }
 
     public async Task<IReadOnlyList<MonthlySalesDto>> GetMonthlySalesAsync(
-        int year)
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
-        var monthly = await _context.Orders
-            .Where(o =>
-                o.OrderDate.Year == year &&
-                o.Status != "Cancelled")
-            .GroupBy(o => o.OrderDate.Month)
+        var ordersQuery = _context.Orders
+            .Where(o => o.Status != "Cancelled");
+
+        if (fromDate.HasValue)
+            ordersQuery = ordersQuery.Where(
+                o => o.OrderDate >= fromDate.Value);
+
+        if (toDate.HasValue)
+            ordersQuery = ordersQuery.Where(
+                o => o.OrderDate <= toDate.Value);
+
+        var monthlySales = await ordersQuery
+            .GroupBy(o => new
+            {
+                o.OrderDate.Year,
+                o.OrderDate.Month
+            })
             .Select(g => new
             {
-                Month = g.Key,
+                g.Key.Year,
+                g.Key.Month,
                 Sales = g.Sum(o => o.TotalAmount)
             })
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Month)
             .ToListAsync();
 
-        var monthlyProfit = await _context.OrderItems
-            .Where(oi =>
-                oi.Order.OrderDate.Year == year &&
-                oi.Order.Status != "Cancelled")
-            .GroupBy(oi => oi.Order.OrderDate.Month)
+        var itemsQuery = _context.OrderItems
+            .Where(oi => oi.Order.Status != "Cancelled");
+
+        if (fromDate.HasValue)
+            itemsQuery = itemsQuery.Where(
+                oi => oi.Order.OrderDate >= fromDate.Value);
+
+        if (toDate.HasValue)
+            itemsQuery = itemsQuery.Where(
+                oi => oi.Order.OrderDate <= toDate.Value);
+
+        var monthlyProfit = await itemsQuery
+            .GroupBy(oi => new
+            {
+                oi.Order.OrderDate.Year,
+                oi.Order.OrderDate.Month
+            })
             .Select(g => new
             {
-                Month = g.Key,
+                g.Key.Year,
+                g.Key.Month,
                 Profit = g.Sum(oi =>
                     (oi.UnitPrice - oi.Product.PurchasePrice) *
                     oi.Quantity)
             })
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Month)
             .ToListAsync();
 
-        var monthNames = new[]
-        {
-            "Jan", "Feb", "Mar", "Apr",
-            "May", "Jun", "Jul", "Aug",
-            "Sep", "Oct", "Nov", "Dec"
-        };
-
-        return Enumerable.Range(1, 12)
-            .Select(m => new MonthlySalesDto
+        var result = monthlySales
+            .Select(x => new MonthlySalesDto
             {
-                Month = monthNames[m - 1],
-                Sales = monthly
-                    .FirstOrDefault(x => x.Month == m)?.Sales ?? 0,
+                Month = new DateTime(x.Year, x.Month, 1)
+                    .ToString("MMM"),
+
+                Sales = x.Sales,
+
                 Profit = monthlyProfit
-                    .FirstOrDefault(x => x.Month == m)?.Profit ?? 0
+                    .Where(p =>
+                        p.Year == x.Year &&
+                        p.Month == x.Month)
+                    .Select(p => p.Profit)
+                    .FirstOrDefault()
             })
             .ToList();
+
+        return result;
     }
 
     public async Task<IReadOnlyList<SalesComparisonDto>> GetSalesComparisonAsync(
-        int year)
+        DateTime? fromDate = null,
+        DateTime? toDate = null)
     {
-        var current = await _context.Orders
-            .Where(o =>
-                o.OrderDate.Year == year &&
-                o.Status != "Cancelled")
-            .GroupBy(o => o.OrderDate.Month)
-            .Select(g => new
-            {
-                Month = g.Key,
-                Sales = g.Sum(o => o.TotalAmount)
-            })
-            .ToListAsync();
+        if (!fromDate.HasValue || !toDate.HasValue)
+            return [];
 
-        var previous = await _context.Orders
-            .Where(o =>
-                o.OrderDate.Year == year - 1 &&
-                o.Status != "Cancelled")
-            .GroupBy(o => o.OrderDate.Month)
-            .Select(g => new
-            {
-                Month = g.Key,
-                Sales = g.Sum(o => o.TotalAmount)
-            })
-            .ToListAsync();
+        var currentFrom = fromDate.Value;
+        var currentTo = toDate.Value;
 
-        var monthNames = new[]
+        var duration = currentTo - currentFrom;
+
+        var previousTo = currentFrom.AddTicks(-1);
+        var previousFrom = previousTo - duration;
+
+        var currentSales = await _context.Orders
+            .Where(o =>
+                o.Status != "Cancelled" &&
+                o.OrderDate >= currentFrom &&
+                o.OrderDate <= currentTo)
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+        var previousSales = await _context.Orders
+            .Where(o =>
+                o.Status != "Cancelled" &&
+                o.OrderDate >= previousFrom &&
+                o.OrderDate <= previousTo)
+            .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+        return new List<SalesComparisonDto>
         {
-            "Jan", "Feb", "Mar", "Apr",
-            "May", "Jun", "Jul", "Aug",
-            "Sep", "Oct", "Nov", "Dec"
-        };
-
-        return Enumerable.Range(1, 12)
-            .Select(m => new SalesComparisonDto
+            new SalesComparisonDto
             {
-                Period = monthNames[m - 1],
-                Current = current
-                    .FirstOrDefault(x => x.Month == m)?.Sales ?? 0,
-                Previous = previous
-                    .FirstOrDefault(x => x.Month == m)?.Sales ?? 0
-            })
-            .ToList();
+                Period = "Current Period",
+                Current = currentSales,
+                Previous = previousSales
+            }
+        };
     }
 
     public async Task<IReadOnlyList<TopProductDto>> GetTopProductsAsync(
@@ -242,10 +268,12 @@ public class DashboardRepository : IDashboardRepository
             .Where(oi => oi.Order.Status != "Cancelled");
 
         if (fromDate.HasValue)
-            query = query.Where(oi => oi.Order.OrderDate >= fromDate.Value);
+            query = query.Where(
+                oi => oi.Order.OrderDate >= fromDate.Value);
 
         if (toDate.HasValue)
-            query = query.Where(oi => oi.Order.OrderDate <= toDate.Value);
+            query = query.Where(
+                oi => oi.Order.OrderDate <= toDate.Value);
 
         return await query
             .GroupBy(oi => oi.Product.ProductName)
@@ -269,10 +297,12 @@ public class DashboardRepository : IDashboardRepository
             .Where(o => o.Status != "Cancelled");
 
         if (fromDate.HasValue)
-            query = query.Where(o => o.OrderDate >= fromDate.Value);
+            query = query.Where(
+                o => o.OrderDate >= fromDate.Value);
 
         if (toDate.HasValue)
-            query = query.Where(o => o.OrderDate <= toDate.Value);
+            query = query.Where(
+                o => o.OrderDate <= toDate.Value);
 
         return await query
             .GroupBy(o => o.Customer.CustomerName)
@@ -295,10 +325,12 @@ public class DashboardRepository : IDashboardRepository
             .Where(oi => oi.Order.Status != "Cancelled");
 
         if (fromDate.HasValue)
-            query = query.Where(oi => oi.Order.OrderDate >= fromDate.Value);
+            query = query.Where(
+                oi => oi.Order.OrderDate >= fromDate.Value);
 
         if (toDate.HasValue)
-            query = query.Where(oi => oi.Order.OrderDate <= toDate.Value);
+            query = query.Where(
+                oi => oi.Order.OrderDate <= toDate.Value);
 
         var grouped = await query
             .GroupBy(oi => oi.Product.Category.CategoryName)

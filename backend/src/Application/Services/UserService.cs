@@ -14,22 +14,34 @@ public class UserService : IUserService
 
     public UserService(AppDbContext context) => _context = context;
 
-    public async Task<PaginatedResponse<UserDto>> GetUsersAsync(QueryParams qp, int? roleId = null, string? status = null)
+    public async Task<PaginatedResponse<UserDto>> GetUsersAsync(
+        QueryParams qp,
+        int? roleId = null,
+        string? status = null)
     {
-        var query = _context.Users.Include(u => u.Role).AsNoTracking();
+        var query = _context.Users
+            .Include(u => u.Role)
+            .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(qp.Search))
         {
             var lower = qp.Search.ToLower();
-            query = query.Where(u => u.FullName.ToLower().Contains(lower) ||
-                                    u.Username.ToLower().Contains(lower) ||
-                                    u.Email.ToLower().Contains(lower));
+
+            query = query.Where(u =>
+                u.FullName.ToLower().Contains(lower) ||
+                u.UserName.ToLower().Contains(lower) ||
+                u.Email!.ToLower().Contains(lower));
         }
-        if (roleId.HasValue) query = query.Where(u => u.RoleId == roleId.Value);
+
+        if (roleId.HasValue)
+            query = query.Where(u => u.RoleID == roleId.Value);
+
         if (!string.IsNullOrEmpty(status) && status != "all")
-            query = query.Where(u => u.IsActive == (status == "active"));
+            query = query.Where(u =>
+                u.IsActive == (status == "active"));
 
         var total = await query.CountAsync();
+
         var items = await query
             .OrderByDescending(u => u.CreatedAt)
             .Skip((qp.Page - 1) * qp.PageSize)
@@ -39,66 +51,89 @@ public class UserService : IUserService
 
         return new PaginatedResponse<UserDto>
         {
-            Data = items, Total = total, Page = qp.Page, PageSize = qp.PageSize,
-            TotalPages = (int)Math.Ceiling((double)total / qp.PageSize),
+            Data = items,
+            Total = total,
+            Page = qp.Page,
+            PageSize = qp.PageSize,
+            TotalPages = (int)Math.Ceiling(
+                (double)total / qp.PageSize)
         };
     }
 
     public async Task<UserDto?> GetUserByIdAsync(int id)
     {
-        var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id);
-        return user == null ? null : AuthService.MapToDto(user);
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.UserID == id);
+
+        return user == null
+            ? null
+            : AuthService.MapToDto(user);
     }
 
     public async Task<UserDto> CreateUserAsync(CreateUserDto dto)
+{
+    var user = new User
     {
-        var user = new User
-        {
-            FullName = dto.FullName,
-            Username = dto.Username,
-            Email = dto.Email,
-            Phone = dto.Phone,
-            RoleId = dto.RoleId,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-        };
-        user.PasswordHash = _hasher.HashPassword(user, dto.Password);
+        FullName = dto.FullName,
+        UserName = dto.UserName,
+        Email = dto.Email,
+        Phone = dto.Phone,
+        RoleID = dto.RoleID,
+        IsActive = true,
+        CreatedAt = DateTime.UtcNow,
+    };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        return AuthService.MapToDto(user);
-    }
+    user.PasswordHash = _hasher.HashPassword(user, dto.Password);
 
-    public async Task<UserDto> UpdateUserAsync(int id, UpdateUserDto dto)
+    _context.Users.Add(user);
+
+    await _context.SaveChangesAsync();
+
+    return AuthService.MapToDto(user);
+}
+
+    public async Task<UserDto> UpdateUserAsync(
+        int id,
+        UpdateUserDto dto)
     {
-        var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id)
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.UserID == id)
             ?? throw new KeyNotFoundException("User not found");
 
         user.FullName = dto.FullName;
         user.Email = dto.Email;
         user.Phone = dto.Phone;
-        user.RoleId = dto.RoleId;
+        user.RoleID = dto.RoleID;
         user.UpdatedAt = DateTime.UtcNow;
 
         if (!string.IsNullOrWhiteSpace(dto.Password))
-            user.PasswordHash = _hasher.HashPassword(user, dto.Password);
+        {
+            user.PasswordHash = _hasher.HashPassword(
+                user,
+                dto.Password);
+        }
 
         await _context.SaveChangesAsync();
+
         return AuthService.MapToDto(user);
     }
 
-    public async Task<UserDto> UpdateUserStatusAsync(int id, bool isActive)
+    public async Task<UserDto> UpdateUserStatusAsync(
+        int id,
+        bool isActive)
     {
-    var user = await _context.Users
-        .Include(u => u.Role)
-        .FirstOrDefaultAsync(u => u.Id == id)
-        ?? throw new KeyNotFoundException("User not found");
+        var user = await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.UserID == id)
+            ?? throw new KeyNotFoundException("User not found");
 
-    user.IsActive = isActive;
-    user.UpdatedAt = DateTime.UtcNow;
+        user.IsActive = isActive;
+        user.UpdatedAt = DateTime.UtcNow;
 
-    await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-    return AuthService.MapToDto(user);
-    }  
+        return AuthService.MapToDto(user);
+    }
 }

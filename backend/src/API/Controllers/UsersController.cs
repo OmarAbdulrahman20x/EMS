@@ -38,7 +38,7 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<UserDto>> Post([FromBody] CreateUserDto dto)
     {
         var user = await _service.CreateUserAsync(dto);
-        return CreatedAtAction(nameof(Get), new { id = user.Id }, user);
+        return CreatedAtAction(nameof(Get), new { id = user.UserID }, user);
     }
 
     [HttpPut("{id}")]

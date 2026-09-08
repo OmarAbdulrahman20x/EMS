@@ -21,3 +21,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# .NET build output
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/

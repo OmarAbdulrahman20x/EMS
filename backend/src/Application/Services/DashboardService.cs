@@ -24,13 +24,14 @@ public class DashboardService : IDashboardService
         };
     }
 
-    public async Task<DashboardChartsDto> GetChartsAsync(DateTime? fromDate = null, DateTime? toDate = null)
+    public async Task<DashboardChartsDto> GetChartsAsync(
+    DateTime? fromDate = null,
+    DateTime? toDate = null)
     {
-        var year = DateTime.UtcNow.Year;
         return new DashboardChartsDto
         {
-            MonthlySales = await _repo.GetMonthlySalesAsync(year),
-            SalesComparison = await _repo.GetSalesComparisonAsync(year),
+            MonthlySales = await _repo.GetMonthlySalesAsync(fromDate, toDate),
+            SalesComparison = await _repo.GetSalesComparisonAsync(fromDate, toDate),
             TopProducts = await _repo.GetTopProductsAsync(fromDate, toDate),
             TopCustomers = await _repo.GetTopCustomersAsync(fromDate, toDate),
             CategoryDistribution = await _repo.GetCategoryDistributionAsync(fromDate, toDate),

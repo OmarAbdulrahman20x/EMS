@@ -12,52 +12,101 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _service;
 
-    public ProductsController(IProductService service) => _service = service;
+    public ProductsController(IProductService service)
+    {
+        _service = service;
+    }
 
     [HttpGet]
     [Authorize(Policy = "products.view")]
     public async Task<ActionResult<PaginatedResponse<ProductDto>>> Get(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null,
-        [FromQuery] int? categoryId = null, [FromQuery] int? supplierId = null, [FromQuery] string? status = null,
-        [FromQuery] string? sortBy = null, [FromQuery] string? sortOrder = "asc")
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] int? categoryId = null,
+        [FromQuery] int? supplierId = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortOrder = "asc")
     {
-        var qp = new QueryParams { Page = page, PageSize = pageSize, Search = search, SortBy = sortBy, SortOrder = sortOrder };
-        return Ok(await _service.GetProductsAsync(qp, categoryId, supplierId, status));
+        var qp = new QueryParams
+        {
+            Page = page,
+            PageSize = pageSize,
+            Search = search,
+            SortBy = sortBy,
+            SortOrder = sortOrder
+        };
+
+        var products = await _service.GetProductsAsync(
+            qp,
+            categoryId,
+            supplierId,
+            status);
+
+        return Ok(products);
     }
 
     [HttpGet("all")]
     [Authorize(Policy = "products.view")]
-    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll() => Ok(await _service.GetAllProductsAsync());
+    public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll()
+    {
+        var products = await _service.GetAllProductsAsync();
 
-    [HttpGet("{id}")]
+        return Ok(products);
+    }
+
+    [HttpGet("{id:int}")]
     [Authorize(Policy = "products.view")]
     public async Task<ActionResult<ProductDto>> Get(int id)
     {
         var product = await _service.GetProductByIdAsync(id);
-        return product == null ? NotFound() : Ok(product);
+
+        if (product == null)
+            return NotFound();
+
+        return Ok(product);
     }
 
     [HttpPost]
     [Authorize(Policy = "products.manage")]
-    public async Task<ActionResult<ProductDto>> Post([FromBody] CreateProductDto dto)
+    public async Task<ActionResult<ProductDto>> Post(
+        [FromBody] CreateProductDto dto)
     {
         var product = await _service.CreateProductAsync(dto);
-        return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
+
+        return CreatedAtAction(
+            nameof(Get),
+            new { id = product.ProductID },
+            product);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize(Policy = "products.manage")]
-    public async Task<ActionResult<ProductDto>> Put(int id, [FromBody] UpdateProductDto dto)
+    public async Task<ActionResult<ProductDto>> Put(
+        int id,
+        [FromBody] UpdateProductDto dto)
     {
-        return Ok(await _service.UpdateProductAsync(id, dto));
+        var product = await _service.UpdateProductAsync(id, dto);
+
+        return Ok(product);
     }
 
-    [HttpPatch("{id}/status")]
+    [HttpPatch("{id:int}/status")]
     [Authorize(Policy = "products.manage")]
-    public async Task<ActionResult<ProductDto>> PatchStatus(int id, [FromBody] UpdateProductStatusDto dto)
+    public async Task<ActionResult<ProductDto>> PatchStatus(
+        int id,
+        [FromBody] UpdateProductStatusDto dto)
     {
-        return Ok(await _service.UpdateProductStatusAsync(id, dto.Status));
+        var product = await _service.UpdateProductStatusAsync(
+            id,
+            dto.Status);
+
+        return Ok(product);
     }
 }
 
-public class UpdateProductStatusDto { public string Status { get; set; } = "active"; }
+public class UpdateProductStatusDto
+{
+    public string Status { get; set; } = "active";
+}

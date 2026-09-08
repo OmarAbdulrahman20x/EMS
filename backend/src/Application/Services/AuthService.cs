@@ -30,8 +30,7 @@ public class AuthService : IAuthService
             .Include(u => u.Role)
                 .ThenInclude(r => r.RolePermissions)
                     .ThenInclude(rp => rp.Permission)
-            .FirstOrDefaultAsync(u => u.UserName == loginDto.Username || u.Email == loginDto.Username);
-
+            .FirstOrDefaultAsync(u => u.UserName == loginDto.UserName || u.Email == loginDto.UserName);
         if (user == null || !user.IsActive)
             throw new UnauthorizedAccessException("Invalid username or password");
 
@@ -47,14 +46,14 @@ public class AuthService : IAuthService
 
         return new AuthResponseDto
         {
-            Id = user.UserID,
-            FullName = user.FullName,
-            Username = user.UserName,
-            Email = user.Email,
-            Phone = user.Phone,
-            Role = user.Role?.RoleName ?? "",
-            Permissions = permissions,
-            Token = token,
+                UserID = user.UserID,
+                FullName = user.FullName,
+                UserName = user.UserName,
+                Email = user.Email,
+                Phone = user.Phone,
+                RoleName = user.Role?.RoleName ?? "",
+                Permissions = permissions,
+                Token = token,
         };
     }
 
@@ -107,17 +106,18 @@ public class AuthService : IAuthService
     }
 
     internal static UserDto MapToDto(User user) => new()
-    {
-        Id = user.UserID,
-        FullName = user.FullName,
-        Username = user.UserName,
-        Email = user.Email,
-        Phone = user.Phone,
-        RoleId = user.RoleID,
-        RoleName = user.Role?.RoleName ?? "",
-        Status = user.IsActive ? "active" : "inactive",
-        CreatedAt = user.CreatedAt,
-    };
+{
+    UserID = user.UserID,
+    FullName = user.FullName,
+    UserName = user.UserName,
+    Email = user.Email,
+    Phone = user.Phone,
+    RoleID = user.RoleID,
+    RoleName = user.Role?.RoleName ?? "",
+    IsActive = user.IsActive,
+    Status = user.IsActive ? "active" : "inactive",
+    CreatedAt = user.CreatedAt,
+};
 
     private static string NormalizePermission(string permission) => permission switch
     {

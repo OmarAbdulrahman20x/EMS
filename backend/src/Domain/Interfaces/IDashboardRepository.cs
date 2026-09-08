@@ -9,8 +9,12 @@ public interface IDashboardRepository
     Task<BestSellingProductDto?> GetBestSellingProductAsync(DateTime? fromDate = null, DateTime? toDate = null);
     Task<BestSellingProductDto?> GetLeastSellingProductAsync(DateTime? fromDate = null, DateTime? toDate = null);
     Task<TopCustomerDto?> GetTopCustomerAsync(DateTime? fromDate = null, DateTime? toDate = null);
-    Task<IReadOnlyList<MonthlySalesDto>> GetMonthlySalesAsync(int year);
-    Task<IReadOnlyList<SalesComparisonDto>> GetSalesComparisonAsync(int year);
+    Task<IReadOnlyList<MonthlySalesDto>> GetMonthlySalesAsync(
+        DateTime? fromDate = null,
+        DateTime? toDate = null);   
+    Task<IReadOnlyList<SalesComparisonDto>> GetSalesComparisonAsync(
+        DateTime? fromDate = null,
+        DateTime? toDate = null);
     Task<IReadOnlyList<TopProductDto>> GetTopProductsAsync(DateTime? fromDate, DateTime? toDate, int limit = 5);
     Task<IReadOnlyList<TopCustomerDto>> GetTopCustomersAsync(DateTime? fromDate, DateTime? toDate, int limit = 5);
     Task<IReadOnlyList<CategoryDistributionDto>> GetCategoryDistributionAsync(DateTime? fromDate, DateTime? toDate);
